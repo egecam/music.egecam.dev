@@ -6,12 +6,14 @@ type TrackProps = {
   src?: string;
   title?: string;
   subtitle?: string;
+  coverSrc?: string;
 };
 
 export default function Track({
   src = "https://media.egecam.dev/audio/monuments.wav",
-  title = "Work in Progress",
-  subtitle = "Demo",
+  title = "Monuments",
+  subtitle = "A piece of art that is very good and very bad",
+  coverSrc,
 }: TrackProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -122,23 +124,36 @@ export default function Track({
 
   return (
     <div className="flex w-full flex-col gap-2 text-zinc-50">
-      <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-300">
-        {subtitle}
-      </p>
-      <h2 className="text-2xl font-semibold">{title}</h2>
+      <div className="flex items-center gap-4">
+        <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-amber-300 via-rose-400 to-indigo-500">
+          {coverSrc ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={coverSrc}
+              alt=""
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+          ) : null}
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <p className="eyebrow text-xs">{subtitle}</p>
+          <h2 className="title-strong text-2xl">{title}</h2>
+        </div>
+      </div>
 
       <div className="flex items-center gap-5">
         <button
           type="button"
           onClick={handleToggle}
-          className="inline-flex h-12 w-12 items-center justify-center text-amber-300 transition hover:text-amber-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-300/70 focus-visible:outline-offset-2"
+          className="inline-flex h-14 w-14 cursor-pointer items-center justify-center text-amber-300 transition hover:text-amber-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-300/70 focus-visible:outline-offset-2"
           aria-pressed={isPlaying}
           aria-label={isPlaying ? "Pause track" : "Play track"}
         >
           {isPlaying ? (
             <svg
-              width="26"
-              height="26"
+              width="30"
+              height="30"
               viewBox="0 0 24 24"
               fill="currentColor"
               aria-hidden
@@ -148,8 +163,8 @@ export default function Track({
             </svg>
           ) : (
             <svg
-              width="26"
-              height="26"
+              width="30"
+              height="30"
               viewBox="0 0 24 24"
               fill="currentColor"
               aria-hidden
@@ -172,7 +187,7 @@ export default function Track({
                 key={index}
                 type="button"
                 onClick={() => handleBarClick(index)}
-                className="group relative h-24 w-[6px] rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                className="group relative h-24 w-[6px] cursor-pointer rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
                 aria-label={`Seek to ${(index / bars.length) * 100}%`}
               >
                 <span
