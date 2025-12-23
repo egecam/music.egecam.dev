@@ -123,9 +123,9 @@ export default function Track({
   }, []);
 
   return (
-    <div className="flex w-full flex-col gap-2 text-zinc-50">
+    <div className="flex w-full flex-col gap-2 text-[var(--foreground)]">
       <div className="flex items-center gap-4">
-        <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-amber-300 via-rose-400 to-indigo-500">
+        <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--accent)] via-rose-400 to-indigo-500">
           {coverSrc ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -138,7 +138,7 @@ export default function Track({
         </div>
         <div className="flex flex-col gap-1.5">
           <p className="eyebrow text-xs">{subtitle}</p>
-          <h2 className="title-strong text-2xl">{title}</h2>
+          <h2 className="audio-title text-2xl">{title}</h2>
         </div>
       </div>
 
@@ -146,7 +146,7 @@ export default function Track({
         <button
           type="button"
           onClick={handleToggle}
-          className="inline-flex h-14 w-14 cursor-pointer items-center justify-center text-amber-300 transition hover:text-amber-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-300/70 focus-visible:outline-offset-2"
+          className="inline-flex h-14 w-14 cursor-pointer items-center justify-center text-[var(--accent)] transition hover:text-[#ff6a2e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]/70 focus-visible:outline-offset-2 focus-visible:outline-[var(--background)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
           aria-pressed={isPlaying}
           aria-label={isPlaying ? "Pause track" : "Play track"}
         >
@@ -187,16 +187,16 @@ export default function Track({
                 key={index}
                 type="button"
                 onClick={() => handleBarClick(index)}
-                className="group relative h-24 w-[6px] cursor-pointer rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                className="group relative h-24 w-[6px] cursor-pointer rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
                 aria-label={`Seek to ${(index / bars.length) * 100}%`}
               >
                 <span
-                  className="absolute inset-x-0 rounded-full transition group-hover:bg-amber-200"
+                  className="absolute inset-x-0 rounded-full transition group-hover:bg-[var(--accent)]/85"
                   style={{
                     height: `${height}%`,
                     top: "50%",
                     transform: `translateY(-50%) scaleY(${scale})`,
-                    backgroundColor: "#fbbf24",
+                    backgroundColor: "var(--accent)",
                     opacity: intensity,
                     transition:
                       "background-color 200ms ease, opacity 180ms ease, transform 160ms ease",
