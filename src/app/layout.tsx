@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, Inter } from "next/font/google";
+import { Bowlby_One, IBM_Plex_Sans, Inter } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -15,6 +15,13 @@ const ibmPlexSans = IBM_Plex_Sans({
   display: "swap",
 });
 
+const bowlbyOne = Bowlby_One({
+  variable: "--font-bowlby-one",
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Ege Cam | Music",
   description: "Music projects and releases by Ege Cam.",
@@ -27,7 +34,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${ibmPlexSans.variable} antialiased`}>
+      <body
+        className={`${inter.variable} ${ibmPlexSans.variable} ${bowlbyOne.variable} antialiased`}
+      >
         {children}
       </body>
     </html>
