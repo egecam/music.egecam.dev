@@ -12,7 +12,7 @@ type TrackProps = {
 export default function Track({
   src = "https://media.egecam.dev/audio/monuments.wav",
   title = "Monuments",
-  subtitle = "A piece of art that is very good and very bad",
+  subtitle = "Introductory subtitle",
   coverSrc,
 }: TrackProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
