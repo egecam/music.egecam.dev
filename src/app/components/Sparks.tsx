@@ -9,28 +9,28 @@ type Spark = {
 
 const sparks: Spark[] = [
   {
-    title: "Late-night drive",
+    title: "Folk stories",
     cover:
       "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=600&q=80",
     accent: "rgba(255, 69, 0, 0.4)",
     offset: -40,
   },
   {
-    title: "Analog textures",
+    title: "Myths and sagas",
     cover:
       "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=600&q=80",
     accent: "rgba(255, 69, 0, 0.35)",
     offset: -10,
   },
   {
-    title: "Cinema grain",
+    title: "Shared nostalgia",
     cover:
       "https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=600&q=80",
     accent: "rgba(255, 69, 0, 0.3)",
     offset: 20,
   },
   {
-    title: "Coastal air",
+    title: "Imagined worlds",
     cover:
       "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80",
     accent: "rgba(255, 69, 0, 0.25)",
@@ -63,7 +63,7 @@ export default function Sparks() {
               />
               <div className="absolute inset-0 rounded-3xl ring-1 ring-black/5" />
             </div>
-            <div className="pointer-events-none absolute -top-10 left-1/2 w-max -translate-x-1/2 rounded-full bg-white/90 px-3 py-1.5 text-xs text-[var(--foreground)] opacity-0 shadow-md transition duration-150 group-hover:-translate-y-1 group-hover:opacity-100">
+            <div className="pointer-events-none absolute -top-12 left-1/2 w-max -translate-x-1/2 rounded-full bg-white/90 px-3 py-2 text-xs text-[var(--foreground)] opacity-0 shadow-md transition duration-150 group-hover:-translate-y-1 group-hover:opacity-100">
               {spark.title}
             </div>
           </div>
