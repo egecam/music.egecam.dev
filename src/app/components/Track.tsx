@@ -3,18 +3,26 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 type TrackProps = {
+  trackId: string;
   src?: string;
   title?: string;
   subtitle?: string;
   coverSrc?: string;
+  isActive?: boolean;
+  onRequestPlay?: (id: string) => void;
 };
 
 export default function Track({
+  trackId,
   src = "https://media.egecam.dev/audio/monuments.wav",
   title = "Monuments",
   subtitle = "Introductory subtitle",
   coverSrc,
+  isActive = false,
+  onRequestPlay,
 }: TrackProps) {
+  const ACCENT = "var(--accent)";
+  const BASE_BAR = "#f5f5f5";
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const rafRef = useRef<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -40,13 +48,13 @@ export default function Track({
     cancelRaf();
     const step = () => {
       const audio = audioRef.current;
-      if (audio) {
-        const { duration, currentTime } = audio;
-        if (duration && !Number.isNaN(duration)) {
-          setProgress(currentTime / duration);
-        }
-        rafRef.current = requestAnimationFrame(step);
+      if (!audio) return;
+
+      const { duration, currentTime } = audio;
+      if (duration && !Number.isNaN(duration)) {
+        setProgress(currentTime / duration);
       }
+      rafRef.current = requestAnimationFrame(step);
     };
     rafRef.current = requestAnimationFrame(step);
   };
@@ -77,11 +85,17 @@ export default function Track({
   const handleToggle = () => {
     const audio = audioRef.current;
     if (!audio) return;
-    if (audio.paused) {
-      playAudio();
-    } else {
-      pauseAudio();
+    if (isActive) {
+      if (audio.paused) {
+        playAudio();
+      } else {
+        pauseAudio();
+      }
+      return;
     }
+
+    onRequestPlay?.(trackId);
+    playAudio();
   };
 
   const handleBarClick = (index: number) => {
@@ -122,10 +136,17 @@ export default function Track({
     };
   }, []);
 
+  useEffect(() => {
+    if (!isActive) {
+      pauseAudio();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isActive]);
+
   return (
-    <div className="flex w-full flex-col gap-2 text-[var(--foreground)]">
-      <div className="flex items-center gap-4">
-        <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--accent)] via-rose-400 to-indigo-500">
+    <div className="flex w-full flex-col gap-2 text-[var(--background)]">
+      <div className="flex items-center gap-3">
+        <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-[var(--accent)] via-rose-400 to-indigo-500">
           {coverSrc ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -136,24 +157,26 @@ export default function Track({
             />
           ) : null}
         </div>
-        <div className="flex flex-col gap-1.5">
-          <p className="eyebrow text-xs">{subtitle}</p>
-          <h2 className="audio-title text-2xl">{title}</h2>
+        <div className="flex flex-col gap-1">
+          <p className="eyebrow text-xs" style={{ color: "#f5f5f5" }}>
+            {subtitle}
+          </p>
+          <h2 className="audio-title text-xl">{title}</h2>
         </div>
       </div>
 
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-4">
         <button
           type="button"
           onClick={handleToggle}
-          className="inline-flex h-14 w-14 cursor-pointer items-center justify-center text-[var(--accent)] transition hover:text-[#ff6a2e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]/70 focus-visible:outline-offset-2 focus-visible:outline-[var(--background)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
+          className="inline-flex h-12 w-12 cursor-pointer items-center justify-center text-[var(--accent)] transition hover:text-[#ff6a2e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]/70 focus-visible:outline-offset-2 focus-visible:outline-[var(--background)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
           aria-pressed={isPlaying}
           aria-label={isPlaying ? "Pause track" : "Play track"}
         >
           {isPlaying ? (
             <svg
-              width="30"
-              height="30"
+              width="24"
+              height="24"
               viewBox="0 0 24 24"
               fill="currentColor"
               aria-hidden
@@ -163,8 +186,8 @@ export default function Track({
             </svg>
           ) : (
             <svg
-              width="30"
-              height="30"
+              width="24"
+              height="24"
               viewBox="0 0 24 24"
               fill="currentColor"
               aria-hidden
@@ -174,7 +197,7 @@ export default function Track({
           )}
         </button>
 
-        <div className="relative flex flex-1 items-center gap-[8px] py-4">
+        <div className="relative flex flex-1 items-center gap-[7px] py-3">
           {bars.map((height, index) => {
             const position = progress * bars.length;
             const fillAmount = Math.min(1, Math.max(0, position - index));
@@ -187,7 +210,7 @@ export default function Track({
                 key={index}
                 type="button"
                 onClick={() => handleBarClick(index)}
-                className="group relative h-24 w-[6px] cursor-pointer rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
+                className="group relative h-20 w-[6px] cursor-pointer rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
                 aria-label={`Seek to ${(index / bars.length) * 100}%`}
               >
                 <span
@@ -196,10 +219,10 @@ export default function Track({
                     height: `${height}%`,
                     top: "50%",
                     transform: `translateY(-50%) scaleY(${scale})`,
-                    backgroundColor: "var(--accent)",
-                    opacity: intensity,
+                    backgroundColor: filled ? ACCENT : BASE_BAR,
+                    opacity: filled ? intensity : 0.9,
                     transition:
-                      "background-color 200ms ease, opacity 180ms ease, transform 160ms ease",
+                      "background-color 480ms ease-in-out, opacity 240ms ease, transform 160ms ease",
                   }}
                 />
               </button>
