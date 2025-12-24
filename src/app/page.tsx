@@ -1,7 +1,13 @@
+"use client";
+
+import { useState } from "react";
 import Track from "./components/Track";
 import Sparks from "./components/Sparks";
+import Contact from "./components/Contact";
 
 export default function Home() {
+  const [activeTrackId, setActiveTrackId] = useState<string | null>(null);
+
   return (
     <div className="flex min-h-screen items-start justify-center bg-[var(--background)] px-6 py-14 text-[var(--foreground)]">
       <main className="w-full max-w-3xl space-y-10">
@@ -12,27 +18,30 @@ export default function Home() {
             I create sonic experiences that live between story and image.
           </p>
           <p className="subtitle">
-            Placeholder copy about your practice, approach, and background. Swap
-            in your story to share how you craft sonic experiences, the mediums
-            you work in, and what listeners can expect next.
+            I work by listening to the story first. Whether it comes from an
+            image, a scene, or a mood, I translate narrative into sound through
+            restrained melodies, textural harmony, and subtle movement. My
+            approach draws from a wide palette of instruments and sound sources,
+            moving freely between acoustic, orchestral, and electronic elements
+            to find the right voice for each world.
           </p>
+          <div className="pt-2">
+            <iframe
+              data-testid="embed-iframe"
+              style={{ borderRadius: "12px" }}
+              src="https://open.spotify.com/embed/track/21mEgD8s9cfbeyLyGtUFN4?utm_source=generator&theme=0"
+              width="100%"
+              height="152"
+              frameBorder="0"
+              allowFullScreen
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+            ></iframe>
+          </div>
         </header>
 
-        <section className="space-y-6">
-          <Track
-            src="https://media.egecam.dev/audio/monuments.wav"
-            title="Monuments"
-            subtitle="A piece of art that is very good and very bad"
-          />
-          <Track
-            src="https://media.egecam.dev/audio/monuments.wav"
-            title="Monuments"
-            subtitle="A piece of art that is very good and very bad"
-          />
-        </section>
-
         {/* Sparks (blank) */}
-        <section className="space-y-2">
+        <section className="space-y-2 pt-6 sm:pt-8">
           <h2 className="title-strong text-3xl">Sparks</h2>
           <div className="grid grid-cols-1 items-start gap-6 sm:gap-7 md:grid-cols-3">
             <div className="md:col-span-2">
@@ -40,17 +49,61 @@ export default function Home() {
             </div>
             <div className="md:col-span-1 space-y-2 text-left pt-10 sm:pt-12 md:pt-16">
               <p className="subtitle text-base">
-                A rotating stack of references that feed the sound. Hover to
-                peek at the current inspirations—each cover pops to the front as
-                you explore.
+                My work is sparked by the intersection of memory, story, and
+                imagination. I draw from cultural roots, ancient narratives, and
+                everyday emotional residues, then extend them into worlds that
+                do not fully exist yet.
               </p>
             </div>
           </div>
         </section>
 
-        {/* Contact (blank) */}
-        <section className="space-y-2">
-          <h2 className="title-strong text-3xl">Contact</h2>
+        <section className="space-y-6">
+          <div className="rounded-3xl border border-black/15 bg-[#1f1f1f] px-6 py-6">
+            <Track
+              trackId="the-quiet-brave-lily"
+              isActive={activeTrackId === "the-quiet-brave-lily"}
+              onRequestPlay={setActiveTrackId}
+              src="https://media.egecam.dev/audio/the_quiet_brave_lily.wav"
+              title="The Quiet Brave Lily"
+              subtitle="Nostalgic, fragile yet hopeful"
+            />
+          </div>
+          <div className="rounded-3xl border border-black/15 bg-[#1f1f1f] px-6 py-6">
+            <Track
+              trackId="flip-flops"
+              isActive={activeTrackId === "flip-flops"}
+              onRequestPlay={setActiveTrackId}
+              src="https://media.egecam.dev/audio/flip-flop.wav"
+              title="Flip-flops"
+              subtitle="Lively seaside longing"
+            />
+          </div>
+          <div className="rounded-3xl border border-black/15 bg-[#1f1f1f] px-6 py-6">
+            <Track
+              trackId="spellsire"
+              isActive={activeTrackId === "spellsire"}
+              onRequestPlay={setActiveTrackId}
+              src="https://media.egecam.dev/audio/spellsire.wav"
+              title="Spellsire"
+              subtitle="Mythic digital folk"
+            />
+          </div>
+          <div className="rounded-3xl border border-black/15 bg-[#1f1f1f] px-6 py-6">
+            <Track
+              trackId="monuments"
+              isActive={activeTrackId === "monuments"}
+              onRequestPlay={setActiveTrackId}
+              src="https://media.egecam.dev/audio/monuments.wav"
+              title="Monuments"
+              subtitle="Mythic voice of ancient stones"
+            />
+          </div>
+        </section>
+
+        {/* Contact */}
+        <section className="space-y-4">
+          <Contact />
         </section>
       </main>
     </div>
