@@ -197,7 +197,7 @@ export default function Track({
           )}
         </button>
 
-        <div className="relative flex flex-1 items-center gap-[7px] py-3">
+        <div className="relative flex flex-1 items-center gap-[6px] py-2 sm:gap-[7px] sm:py-3">
           {bars.map((height, index) => {
             const position = progress * bars.length;
             const fillAmount = Math.min(1, Math.max(0, position - index));
@@ -210,7 +210,7 @@ export default function Track({
                 key={index}
                 type="button"
                 onClick={() => handleBarClick(index)}
-                className="group relative h-20 w-[6px] cursor-pointer rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
+                className="group relative h-16 w-[5px] cursor-pointer rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] sm:h-20 sm:w-[6px]"
                 aria-label={`Seek to ${(index / bars.length) * 100}%`}
               >
                 <span
