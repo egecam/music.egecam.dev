@@ -43,8 +43,8 @@ export default function Home() {
   const selectedTrack = tracks.find((track) => track.sparkId === selectedSparkId);
 
   return (
-    <div className="flex min-h-screen items-start justify-center bg-[var(--background)] px-6 py-14 text-[var(--foreground)]">
-      <main className="w-full max-w-3xl space-y-10">
+    <div className="flex min-h-screen items-start justify-center bg-[var(--background)] px-4 py-10 text-[var(--foreground)] sm:px-6 sm:py-12 md:py-14">
+      <main className="w-full max-w-3xl space-y-8 sm:space-y-10">
         {/* Hero */}
         <header className="space-y-4">
           <h1 className="title-strong text-5xl sm:text-6xl">Ege Çam</h1>
