@@ -52,41 +52,48 @@ type SparksProps = {
 export default function Sparks({ items, onSelect, activeId }: SparksProps) {
   const sparks = items ?? defaultSparks;
   return (
-    <div className="relative h-64 w-full overflow-visible">
-      <div className="relative h-full w-full">
-        {sparks.map((spark, idx) => (
-          <div
-            key={spark.title}
-            className={`group absolute bottom-0 cursor-pointer transition-all duration-200 ${
-              activeId && activeId !== spark.id
-                ? "opacity-60 translate-y-0"
-                : activeId === spark.id
-                ? "-translate-y-4 opacity-100"
-                : "translate-y-0 opacity-100"
-            }`}
-            style={{
-              left: `${idx * 96 + 12}px`,
-              zIndex: idx + 1,
-            }}
-            onClick={() => onSelect?.(spark.id)}
-          >
-            <div className="relative h-48 w-48 overflow-hidden rounded-2xl bg-[var(--background-alt)] shadow-[0_10px_35px_rgba(0,0,0,0.12)] ring-1 ring-white/50 transition duration-200 ease-out group-hover:-translate-y-4 group-hover:scale-[1.02] group-hover:shadow-[0_24px_55px_rgba(0,0,0,0.2)]">
-              <div
-                className="absolute inset-0"
-                style={{
-                  backgroundImage: `linear-gradient(180deg, ${spark.accent}, transparent 50%), url(${spark.cover})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                  filter: "saturate(1.05)",
-                }}
-              />
-              <div className="absolute inset-0 rounded-3xl ring-1 ring-black/5" />
+    <div className="relative h-60 w-full overflow-visible sm:h-64">
+      <div className="relative h-full w-full max-w-[340px] sm:max-w-none mx-auto sm:mx-0">
+        {sparks.map((spark, idx) => {
+          const baseClasses =
+            "group absolute bottom-0 cursor-pointer transition-all duration-200 left-[var(--offset-mobile)] sm:left-[var(--offset-desktop)]";
+          const stateClasses =
+            activeId && activeId !== spark.id
+              ? "opacity-60 translate-y-0"
+              : activeId === spark.id
+              ? "-translate-y-3 sm:-translate-y-4 opacity-100"
+              : "translate-y-0 opacity-100";
+
+          return (
+            <div
+              key={spark.title}
+              className={`${baseClasses} ${stateClasses}`}
+              style={
+                {
+                  "--offset-mobile": `calc(${idx} * 3.3rem)`,
+                  "--offset-desktop": `calc(${idx} * 5.5rem + 0.5rem)`,
+                } as React.CSSProperties
+              }
+              onClick={() => onSelect?.(spark.id)}
+            >
+              <div className="relative h-40 w-40 overflow-hidden rounded-2xl bg-[var(--background-alt)] shadow-[0_10px_35px_rgba(0,0,0,0.12)] ring-1 ring-white/50 transition duration-200 ease-out group-hover:-translate-y-3 group-hover:scale-[1.02] group-hover:shadow-[0_24px_55px_rgba(0,0,0,0.2)] sm:h-48 sm:w-48">
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage: `linear-gradient(180deg, ${spark.accent}, transparent 50%), url(${spark.cover})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    filter: "saturate(1.05)",
+                  }}
+                />
+                <div className="absolute inset-0 rounded-3xl ring-1 ring-black/5" />
+              </div>
+              <div className="pointer-events-none absolute -top-12 left-1/2 w-max -translate-x-1/2 rounded-full bg-white/90 px-3 py-2 text-xs text-[var(--foreground)] opacity-0 shadow-md transition duration-150 group-hover:-translate-y-1 group-hover:opacity-100">
+                {spark.title}
+              </div>
             </div>
-            <div className="pointer-events-none absolute -top-12 left-1/2 w-max -translate-x-1/2 rounded-full bg-white/90 px-3 py-2 text-xs text-[var(--foreground)] opacity-0 shadow-md transition duration-150 group-hover:-translate-y-1 group-hover:opacity-100">
-              {spark.title}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
