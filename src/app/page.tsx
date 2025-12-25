@@ -7,6 +7,40 @@ import Contact from "./components/Contact";
 
 export default function Home() {
   const [activeTrackId, setActiveTrackId] = useState<string | null>(null);
+  const [selectedSparkId, setSelectedSparkId] = useState<string | null>(null);
+
+  const tracks = [
+    {
+      sparkId: "late-night-drive",
+      trackId: "the-quiet-brave-lily",
+      src: "https://media.egecam.dev/audio/the_quiet_brave_lily.wav",
+      title: "The Quiet Brave Lily",
+      subtitle: "Nostalgic, fragile yet hopeful",
+    },
+    {
+      sparkId: "analog-textures",
+      trackId: "flip-flops",
+      src: "https://media.egecam.dev/audio/flip-flop.wav",
+      title: "Flip-flops",
+      subtitle: "Lively seaside longing",
+    },
+    {
+      sparkId: "cinema-grain",
+      trackId: "spellsire",
+      src: "https://media.egecam.dev/audio/spellsire.wav",
+      title: "Spellsire",
+      subtitle: "Mythic digital folk",
+    },
+    {
+      sparkId: "coastal-air",
+      trackId: "monuments",
+      src: "https://media.egecam.dev/audio/monuments.wav",
+      title: "Monuments",
+      subtitle: "Mythic voice of ancient stones",
+    },
+  ];
+
+  const selectedTrack = tracks.find((track) => track.sparkId === selectedSparkId);
 
   return (
     <div className="flex min-h-screen items-start justify-center bg-[var(--background)] px-6 py-14 text-[var(--foreground)]">
@@ -45,7 +79,13 @@ export default function Home() {
           <h2 className="title-strong text-3xl">Sparks</h2>
           <div className="grid grid-cols-1 items-start gap-6 sm:gap-7 md:grid-cols-3">
             <div className="md:col-span-2">
-              <Sparks />
+              <Sparks
+                activeId={selectedSparkId}
+                onSelect={(id) => {
+                  setActiveTrackId(null);
+                  setSelectedSparkId(id);
+                }}
+              />
             </div>
             <div className="md:col-span-1 space-y-2 text-left pt-10 sm:pt-12 md:pt-16">
               <p className="subtitle text-base">
@@ -59,46 +99,21 @@ export default function Home() {
         </section>
 
         <section className="space-y-6">
-          <div className="rounded-3xl border border-black/15 bg-[#1f1f1f] px-6 py-6">
-            <Track
-              trackId="the-quiet-brave-lily"
-              isActive={activeTrackId === "the-quiet-brave-lily"}
-              onRequestPlay={setActiveTrackId}
-              src="https://media.egecam.dev/audio/the_quiet_brave_lily.wav"
-              title="The Quiet Brave Lily"
-              subtitle="Nostalgic, fragile yet hopeful"
-            />
-          </div>
-          <div className="rounded-3xl border border-black/15 bg-[#1f1f1f] px-6 py-6">
-            <Track
-              trackId="flip-flops"
-              isActive={activeTrackId === "flip-flops"}
-              onRequestPlay={setActiveTrackId}
-              src="https://media.egecam.dev/audio/flip-flop.wav"
-              title="Flip-flops"
-              subtitle="Lively seaside longing"
-            />
-          </div>
-          <div className="rounded-3xl border border-black/15 bg-[#1f1f1f] px-6 py-6">
-            <Track
-              trackId="spellsire"
-              isActive={activeTrackId === "spellsire"}
-              onRequestPlay={setActiveTrackId}
-              src="https://media.egecam.dev/audio/spellsire.wav"
-              title="Spellsire"
-              subtitle="Mythic digital folk"
-            />
-          </div>
-          <div className="rounded-3xl border border-black/15 bg-[#1f1f1f] px-6 py-6">
-            <Track
-              trackId="monuments"
-              isActive={activeTrackId === "monuments"}
-              onRequestPlay={setActiveTrackId}
-              src="https://media.egecam.dev/audio/monuments.wav"
-              title="Monuments"
-              subtitle="Mythic voice of ancient stones"
-            />
-          </div>
+          {selectedTrack && (
+            <div
+              key={selectedTrack.trackId}
+              className="rounded-3xl border border-black/15 bg-[#1f1f1f] px-6 py-6"
+            >
+              <Track
+                trackId={selectedTrack.trackId}
+                isActive={activeTrackId === selectedTrack.trackId}
+                onRequestPlay={setActiveTrackId}
+                src={selectedTrack.src}
+                title={selectedTrack.title}
+                subtitle={selectedTrack.subtitle}
+              />
+            </div>
+          )}
         </section>
 
         {/* Contact */}
