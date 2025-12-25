@@ -137,11 +137,11 @@ export default function Track({
   }, []);
 
   useEffect(() => {
-    if (!isActive) {
+    if (!isActive && isPlaying) {
       pauseAudio();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActive]);
+  }, [isActive, isPlaying]);
 
   return (
     <div className="flex w-full flex-col gap-2 text-[var(--background)]">
