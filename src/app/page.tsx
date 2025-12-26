@@ -93,9 +93,9 @@ export default function Home() {
                 imagination. I draw from cultural roots, ancient narratives, and
                 everyday emotional residues, then extend them into worlds that
                 do not fully exist yet.
-              </p>
+          </p>
             </div>
-          </div>
+        </div>
         </section>
 
         <section className="space-y-6">
@@ -112,7 +112,7 @@ export default function Home() {
                 title={selectedTrack.title}
                 subtitle={selectedTrack.subtitle}
               />
-            </div>
+        </div>
           )}
         </section>
 
