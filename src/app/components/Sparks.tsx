@@ -52,8 +52,8 @@ type SparksProps = {
 export default function Sparks({ items, onSelect, activeId }: SparksProps) {
   const sparks = items ?? defaultSparks;
   return (
-    <div className="relative h-60 w-full overflow-visible sm:h-64">
-      <div className="relative h-full w-full max-w-[340px] sm:max-w-none mx-auto sm:mx-0">
+    <div className="relative h-60 w-full overflow-hidden sm:h-64 sm:overflow-visible">
+      <div className="relative h-full w-full max-w-[320px] sm:max-w-none mx-auto sm:mx-0">
         {sparks.map((spark, idx) => {
           const baseClasses =
             "group absolute bottom-0 cursor-pointer transition-all duration-200 left-[var(--offset-mobile)] sm:left-[var(--offset-desktop)]";
@@ -70,13 +70,13 @@ export default function Sparks({ items, onSelect, activeId }: SparksProps) {
               className={`${baseClasses} ${stateClasses}`}
               style={
                 {
-                  "--offset-mobile": `calc(${idx} * 3.3rem)`,
+                  "--offset-mobile": `calc(${idx} * min(2.8rem, 12vw))`,
                   "--offset-desktop": `calc(${idx} * 5.5rem + 0.5rem)`,
                 } as React.CSSProperties
               }
               onClick={() => onSelect?.(spark.id)}
             >
-              <div className="relative h-40 w-40 overflow-hidden rounded-2xl bg-[var(--background-alt)] shadow-[0_10px_35px_rgba(0,0,0,0.12)] ring-1 ring-white/50 transition duration-200 ease-out group-hover:-translate-y-3 group-hover:scale-[1.02] group-hover:shadow-[0_24px_55px_rgba(0,0,0,0.2)] sm:h-48 sm:w-48">
+              <div className="relative h-36 w-36 overflow-hidden rounded-2xl bg-[var(--background-alt)] shadow-[0_10px_35px_rgba(0,0,0,0.12)] ring-1 ring-white/50 transition duration-200 ease-out group-hover:-translate-y-3 group-hover:scale-[1.02] group-hover:shadow-[0_24px_55px_rgba(0,0,0,0.2)] sm:h-48 sm:w-48">
                 <div
                   className="absolute inset-0"
                   style={{
