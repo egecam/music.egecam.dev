@@ -1,3 +1,7 @@
+"use client";
+
+import { track } from "@vercel/analytics";
+
 type ContactProps = {
   headline?: string;
   blurb?: string;
@@ -24,6 +28,7 @@ I’m open to work across film, games, and other narrative-driven projects.`,
       <div className="mt-5 flex flex-col gap-3">
         <a
           href={`mailto:${email}`}
+          onClick={() => track("email_button_clicked", { email })}
           className="inline-flex items-center gap-2 self-start rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--background)] transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]/60"
         >
           Email me
