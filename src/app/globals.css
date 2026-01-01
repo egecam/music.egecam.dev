@@ -62,3 +62,80 @@ body {
 .font-inter {
   font-family: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
 }
+
+@keyframes genie-in {
+  0% {
+    transform: scaleY(0.75) translateY(20px);
+    opacity: 0;
+    filter: blur(6px);
+  }
+  60% {
+    transform: scaleY(1.03) translateY(-2px);
+    opacity: 1;
+    filter: blur(1px);
+  }
+  100% {
+    transform: scaleY(1) translateY(0);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes genie-out {
+  0% {
+    transform: scaleY(1) translateY(0);
+    opacity: 1;
+    filter: blur(0);
+  }
+  100% {
+    transform: scaleY(0.75) translateY(24px);
+    opacity: 0;
+    filter: blur(6px);
+  }
+}
+
+.animate-genie-in {
+  animation: genie-in 0.3s ease-out forwards;
+}
+
+.animate-genie-out {
+  animation: genie-out 0.22s ease-in forwards;
+}
+
+@keyframes wave-active {
+  0% {
+    transform: translateY(-50%) scaleY(1);
+  }
+  35% {
+    transform: translateY(-51.5%) scaleY(1.06);
+  }
+  70% {
+    transform: translateY(-48.5%) scaleY(0.97);
+  }
+  100% {
+    transform: translateY(-50%) scaleY(1);
+  }
+}
+
+@keyframes wave-late {
+  0% {
+    transform: translateY(-50%) scaleY(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(-51%) scaleY(1.04);
+    opacity: 0.98;
+  }
+  100% {
+    transform: translateY(-50%) scaleY(1);
+    opacity: 0.94;
+  }
+}
+
+.animate-wave-active {
+  animation: wave-active 1.4s ease-in-out infinite alternate;
+}
+
+.animate-wave-late {
+  animation: wave-late 0.9s ease-in-out 2 alternate;
+}
