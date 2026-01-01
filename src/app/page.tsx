@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { track } from "@vercel/analytics";
+import { usePostHog } from "posthog-js/react";
 import Track from "./components/Track";
 import Sparks from "./components/Sparks";
 import Contact from "./components/Contact";
@@ -17,6 +17,7 @@ type TrackData = {
 };
 
 export default function Home() {
+  const posthog = usePostHog();
   const [activeTrackId, setActiveTrackId] = useState<string | null>(null);
   const [selectedSparkId, setSelectedSparkId] = useState<string | null>(null);
   const [spotifyLoaded, setSpotifyLoaded] = useState(false);
@@ -73,7 +74,7 @@ export default function Home() {
       const durationSeconds = Math.round(
         (Date.now() - pageLoadTimeRef.current) / 1000
       );
-      track("page_visit_duration", { durationSeconds });
+      posthog.capture("page_visit_duration", { durationSeconds });
     };
 
     const handleVisibilityChange = () => {
@@ -88,7 +89,7 @@ export default function Home() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       trackPageDuration();
     };
-  }, []);
+  }, [posthog]);
 
   useEffect(() => {
     if (!selectedTrack) {

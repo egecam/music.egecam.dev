@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { track } from "@vercel/analytics";
+import { usePostHog } from "posthog-js/react";
 
 type Spark = {
   id: string;
@@ -49,6 +49,7 @@ type SparksProps = {
 };
 
 export default function Sparks({ items, onSelect, activeId }: SparksProps) {
+  const posthog = usePostHog();
   const sparks = items ?? defaultSparks;
   return (
     <div className="relative h-60 w-full overflow-hidden sm:h-64 sm:overflow-visible">
@@ -74,7 +75,10 @@ export default function Sparks({ items, onSelect, activeId }: SparksProps) {
                 } as React.CSSProperties
               }
               onClick={() => {
-                track("clicked_spark", { sparkId: spark.id, sparkTitle: spark.title });
+                posthog.capture("clicked_spark", {
+                  sparkId: spark.id,
+                  sparkTitle: spark.title,
+                });
                 onSelect?.(spark.id);
               }}
             >

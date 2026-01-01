@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { track as trackEvent } from "@vercel/analytics";
+import { usePostHog } from "posthog-js/react";
 
 type TrackProps = {
   trackId: string;
@@ -26,6 +26,7 @@ export default function Track({
   highlightStart = 60,
   highlightEnd = 75,
 }: TrackProps) {
+  const posthog = usePostHog();
   const ACCENT = "var(--accent)";
   const BASE_BAR = "#f5f5f5";
   const BASE_BAR_FADED = "#a3a3a3";
@@ -89,7 +90,7 @@ export default function Track({
         startRaf();
         // Track play event
         playStartTimeRef.current = Date.now();
-        trackEvent("played_track", { trackId, title });
+        posthog.capture("played_track", { trackId, title });
       })
       .catch(() => {
         setIsPlaying(false);
@@ -108,7 +109,7 @@ export default function Track({
       const listenedSeconds = Math.round(
         (Date.now() - playStartTimeRef.current) / 1000
       );
-      trackEvent("listening_duration", {
+      posthog.capture("listening_duration", {
         trackId,
         title,
         durationSeconds: listenedSeconds,
@@ -167,7 +168,7 @@ export default function Track({
         const listenedSeconds = Math.round(
           (Date.now() - playStartTimeRef.current) / 1000
         );
-        trackEvent("listening_duration", {
+        posthog.capture("listening_duration", {
           trackId,
           title,
           durationSeconds: listenedSeconds,
