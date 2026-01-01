@@ -1,22 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Track from "./components/Track";
 import Sparks from "./components/Sparks";
 import Contact from "./components/Contact";
+
+type TrackData = {
+  sparkId: string;
+  trackId: string;
+  src: string;
+  title: string;
+  subtitle: string;
+  highlightStart: number;
+  highlightEnd: number;
+};
 
 export default function Home() {
   const [activeTrackId, setActiveTrackId] = useState<string | null>(null);
   const [selectedSparkId, setSelectedSparkId] = useState<string | null>(null);
   const [spotifyLoaded, setSpotifyLoaded] = useState(false);
+  const [displayedTrack, setDisplayedTrack] = useState<TrackData | null>(null);
+  const [trackAnimState, setTrackAnimState] = useState<"in" | "out">("in");
 
-  const tracks = [
+  const tracks: TrackData[] = [
     {
       sparkId: "late-night-drive",
       trackId: "the-quiet-brave-lily",
       src: "https://media.egecam.dev/audio/the_quiet_brave_lily.wav",
       title: "The Quiet Brave Lily",
       subtitle: "Nostalgic, fragile yet hopeful",
+      highlightStart: 81, // 1:21
+      highlightEnd: 95, // 1:35
     },
     {
       sparkId: "analog-textures",
@@ -24,13 +38,17 @@ export default function Home() {
       src: "https://media.egecam.dev/audio/flip-flop.wav",
       title: "Flip-flops",
       subtitle: "Lively seaside longing",
+      highlightStart: 116, // 1:56
+      highlightEnd: 135, // 2:15
     },
     {
       sparkId: "cinema-grain",
       trackId: "spellsire",
       src: "https://media.egecam.dev/audio/spellsire.wav",
       title: "Spellsire",
-      subtitle: "Mythic digital folk",
+      subtitle: "Neo-noir digital folk",
+      highlightStart: 138, // 2:18
+      highlightEnd: 157, // 2:37
     },
     {
       sparkId: "coastal-air",
@@ -38,12 +56,37 @@ export default function Home() {
       src: "https://media.egecam.dev/audio/monuments.wav",
       title: "Monuments",
       subtitle: "Mythic voice of ancient stones",
+      highlightStart: 64, // 1:04
+      highlightEnd: 80, // 1:20
     },
   ];
 
   const selectedTrack = tracks.find(
     (track) => track.sparkId === selectedSparkId
   );
+
+  useEffect(() => {
+    if (!selectedTrack) {
+      setDisplayedTrack(null);
+      return;
+    }
+
+    if (!displayedTrack) {
+      setDisplayedTrack(selectedTrack);
+      setTrackAnimState("in");
+      return;
+    }
+
+    if (selectedTrack.trackId === displayedTrack.trackId) return;
+
+    setTrackAnimState("out");
+    const timeout = setTimeout(() => {
+      setDisplayedTrack(selectedTrack);
+      setTrackAnimState("in");
+    }, 260);
+
+    return () => clearTimeout(timeout);
+  }, [selectedTrack, displayedTrack]);
 
   return (
     <div className="flex min-h-screen items-start justify-center bg-[var(--background)] px-4 py-10 text-[var(--foreground)] sm:px-6 sm:py-12 md:py-14">
@@ -112,18 +155,24 @@ export default function Home() {
         </section>
 
         <section className="space-y-6">
-          {selectedTrack && (
+          {displayedTrack && (
             <div
-              key={selectedTrack.trackId}
-              className="rounded-3xl border border-black/15 bg-[#1f1f1f] px-6 py-6"
+              key={displayedTrack.trackId}
+              className={`rounded-3xl border border-black/15 bg-[#1f1f1f] px-6 py-6 overflow-hidden [transform-origin:bottom] ${
+                trackAnimState === "in"
+                  ? "animate-genie-in"
+                  : "animate-genie-out"
+              }`}
             >
               <Track
-                trackId={selectedTrack.trackId}
-                isActive={activeTrackId === selectedTrack.trackId}
+                trackId={displayedTrack.trackId}
+                isActive={activeTrackId === displayedTrack.trackId}
                 onRequestPlay={setActiveTrackId}
-                src={selectedTrack.src}
-                title={selectedTrack.title}
-                subtitle={selectedTrack.subtitle}
+                src={displayedTrack.src}
+                title={displayedTrack.title}
+                subtitle={displayedTrack.subtitle}
+                highlightStart={displayedTrack.highlightStart}
+                highlightEnd={displayedTrack.highlightEnd}
               />
             </div>
           )}
