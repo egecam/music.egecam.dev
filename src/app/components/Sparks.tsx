@@ -3,6 +3,9 @@
 import Image from "next/image";
 import { usePostHog } from "posthog-js/react";
 
+// Track unique spark clicks per session (module-level to persist across remounts)
+const clickedSparksThisSession = new Set<string>();
+
 type Spark = {
   id: string;
   title: string;
@@ -75,10 +78,14 @@ export default function Sparks({ items, onSelect, activeId }: SparksProps) {
                 } as React.CSSProperties
               }
               onClick={() => {
-                posthog.capture("clicked_spark", {
-                  sparkId: spark.id,
-                  sparkTitle: spark.title,
-                });
+                // Track only first click per session
+                if (!clickedSparksThisSession.has(spark.id)) {
+                  clickedSparksThisSession.add(spark.id);
+                  posthog.capture("clicked_spark", {
+                    sparkId: spark.id,
+                    sparkTitle: spark.title,
+                  });
+                }
                 onSelect?.(spark.id);
               }}
             >

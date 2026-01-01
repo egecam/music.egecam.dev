@@ -3,6 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePostHog } from "posthog-js/react";
 
+// Track unique plays per session (module-level to persist across remounts)
+const playedTracksThisSession = new Set<string>();
+const playedHighlightsThisSession = new Set<string>();
+
 type TrackProps = {
   trackId: string;
   src?: string;
@@ -88,9 +92,12 @@ export default function Track({
       .then(() => {
         setIsPlaying(true);
         startRaf();
-        // Track play event
         playStartTimeRef.current = Date.now();
-        posthog.capture("played_track", { trackId, title });
+        // Track only first play per session
+        if (!playedTracksThisSession.has(trackId)) {
+          playedTracksThisSession.add(trackId);
+          posthog.capture("played_track", { trackId, title });
+        }
       })
       .catch(() => {
         setIsPlaying(false);
@@ -253,6 +260,11 @@ export default function Track({
       .then(() => {
         setIsPlaying(true);
         startRaf();
+        // Track only first highlight play per session
+        if (!playedHighlightsThisSession.has(trackId)) {
+          playedHighlightsThisSession.add(trackId);
+          posthog.capture("played_highlight", { trackId, title });
+        }
       })
       .catch(() => {
         setIsPlaying(false);
