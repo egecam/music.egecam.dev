@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { track } from "@vercel/analytics";
 import Track from "./components/Track";
 import Sparks from "./components/Sparks";
 import Contact from "./components/Contact";
@@ -21,6 +22,7 @@ export default function Home() {
   const [spotifyLoaded, setSpotifyLoaded] = useState(false);
   const [displayedTrack, setDisplayedTrack] = useState<TrackData | null>(null);
   const [trackAnimState, setTrackAnimState] = useState<"in" | "out">("in");
+  const pageLoadTimeRef = useRef<number>(Date.now());
 
   const tracks: TrackData[] = [
     {
@@ -64,6 +66,29 @@ export default function Home() {
   const selectedTrack = tracks.find(
     (track) => track.sparkId === selectedSparkId
   );
+
+  // Track page visit duration
+  useEffect(() => {
+    const trackPageDuration = () => {
+      const durationSeconds = Math.round(
+        (Date.now() - pageLoadTimeRef.current) / 1000
+      );
+      track("page_visit_duration", { durationSeconds });
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        trackPageDuration();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      trackPageDuration();
+    };
+  }, []);
 
   useEffect(() => {
     if (!selectedTrack) {

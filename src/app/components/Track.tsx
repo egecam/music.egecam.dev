@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { track as trackEvent } from "@vercel/analytics";
 
 type TrackProps = {
   trackId: string;
@@ -33,6 +34,7 @@ export default function Track({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const rafRef = useRef<number | null>(null);
   const postPulseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const playStartTimeRef = useRef<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0); // 0 - 1
   const [postPlayPulse, setPostPlayPulse] = useState(false);
@@ -85,6 +87,9 @@ export default function Track({
       .then(() => {
         setIsPlaying(true);
         startRaf();
+        // Track play event
+        playStartTimeRef.current = Date.now();
+        trackEvent("played_track", { trackId, title });
       })
       .catch(() => {
         setIsPlaying(false);
@@ -98,6 +103,18 @@ export default function Track({
     audio.pause();
     setIsPlaying(false);
     cancelRaf();
+    // Track listening duration
+    if (playStartTimeRef.current) {
+      const listenedSeconds = Math.round(
+        (Date.now() - playStartTimeRef.current) / 1000
+      );
+      trackEvent("listening_duration", {
+        trackId,
+        title,
+        durationSeconds: listenedSeconds,
+      });
+      playStartTimeRef.current = null;
+    }
   };
 
   const handleToggle = () => {
@@ -145,6 +162,18 @@ export default function Track({
       postPulseTimeoutRef.current = setTimeout(() => {
         setPostPlayPulse(false);
       }, 900);
+      // Track listening duration on end
+      if (playStartTimeRef.current) {
+        const listenedSeconds = Math.round(
+          (Date.now() - playStartTimeRef.current) / 1000
+        );
+        trackEvent("listening_duration", {
+          trackId,
+          title,
+          durationSeconds: listenedSeconds,
+        });
+        playStartTimeRef.current = null;
+      }
     };
 
     audio.addEventListener("play", onPlay);

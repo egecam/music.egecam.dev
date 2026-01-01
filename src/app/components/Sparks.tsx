@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { track } from "@vercel/analytics";
 
 type Spark = {
   id: string;
@@ -72,7 +73,10 @@ export default function Sparks({ items, onSelect, activeId }: SparksProps) {
                   zIndex,
                 } as React.CSSProperties
               }
-              onClick={() => onSelect?.(spark.id)}
+              onClick={() => {
+                track("clicked_spark", { sparkId: spark.id, sparkTitle: spark.title });
+                onSelect?.(spark.id);
+              }}
             >
               <div className="relative h-36 w-36 overflow-hidden rounded-2xl bg-[var(--background-alt)] shadow-[0_10px_35px_rgba(0,0,0,0.12)] ring-1 ring-white/50 transition duration-200 ease-out group-hover:-translate-y-3 group-hover:scale-[1.02] group-hover:shadow-[0_24px_55px_rgba(0,0,0,0.2)] sm:h-48 sm:w-48">
                 <Image
