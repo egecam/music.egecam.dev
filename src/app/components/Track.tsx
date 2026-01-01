@@ -10,6 +10,8 @@ type TrackProps = {
   coverSrc?: string;
   isActive?: boolean;
   onRequestPlay?: (id: string) => void;
+  highlightStart?: number;
+  highlightEnd?: number;
 };
 
 export default function Track({
@@ -20,13 +22,21 @@ export default function Track({
   coverSrc,
   isActive = false,
   onRequestPlay,
+  highlightStart = 60,
+  highlightEnd = 75,
 }: TrackProps) {
   const ACCENT = "var(--accent)";
   const BASE_BAR = "#f5f5f5";
+  const BASE_BAR_FADED = "#a3a3a3";
+  const HIGHLIGHT_COLOR = "#facc15";
+  const HIGHLIGHT_COLOR_FADED = "#b8a033";
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const rafRef = useRef<number | null>(null);
+  const postPulseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0); // 0 - 1
+  const [postPlayPulse, setPostPlayPulse] = useState(false);
+  const [duration, setDuration] = useState<number | null>(null);
 
   const bars = useMemo(
     () => [
@@ -42,6 +52,14 @@ export default function Track({
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     }
+  };
+
+  const clearPostPulse = () => {
+    if (postPulseTimeoutRef.current) {
+      clearTimeout(postPulseTimeoutRef.current);
+      postPulseTimeoutRef.current = null;
+    }
+    setPostPlayPulse(false);
   };
 
   const startRaf = () => {
@@ -122,17 +140,33 @@ export default function Track({
       setIsPlaying(false);
       setProgress(0);
       cancelRaf();
+      setPostPlayPulse(true);
+      clearPostPulse();
+      postPulseTimeoutRef.current = setTimeout(() => {
+        setPostPlayPulse(false);
+      }, 900);
     };
 
     audio.addEventListener("play", onPlay);
     audio.addEventListener("pause", onPause);
     audio.addEventListener("ended", onEnded);
+    const setDurationFromAudio = () => {
+      if (!Number.isNaN(audio.duration) && audio.duration > 0) {
+        setDuration(audio.duration);
+      }
+    };
+    audio.addEventListener("loadedmetadata", setDurationFromAudio);
+    audio.addEventListener("durationchange", setDurationFromAudio);
+    setDurationFromAudio();
 
     return () => {
       audio.removeEventListener("play", onPlay);
       audio.removeEventListener("pause", onPause);
       audio.removeEventListener("ended", onEnded);
+      audio.removeEventListener("loadedmetadata", setDurationFromAudio);
+      audio.removeEventListener("durationchange", setDurationFromAudio);
       cancelRaf();
+      clearPostPulse();
     };
   }, []);
 
@@ -142,6 +176,59 @@ export default function Track({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive, isPlaying]);
+
+  const highlightBounds = useMemo(() => {
+    if (!duration || Number.isNaN(duration)) return null;
+    const startRatio = Math.max(0, Math.min(1, highlightStart / duration));
+    const endRatio = Math.max(startRatio, Math.min(1, highlightEnd / duration));
+
+    // Calculate actual highlighted bar indices
+    let firstHighlightedIndex = -1;
+    let lastHighlightedIndex = -1;
+    for (let i = 0; i < bars.length; i++) {
+      const isHighlighted =
+        i / bars.length < endRatio && (i + 1) / bars.length > startRatio;
+      if (isHighlighted) {
+        if (firstHighlightedIndex === -1) firstHighlightedIndex = i;
+        lastHighlightedIndex = i;
+      }
+    }
+
+    // Calculate center position based on actual bar indices
+    const centerIndex = (firstHighlightedIndex + lastHighlightedIndex + 1) / 2;
+    const centerRatio = centerIndex / bars.length;
+
+    return {
+      startRatio,
+      endRatio,
+      firstHighlightedIndex,
+      lastHighlightedIndex,
+      centerRatio,
+    };
+  }, [duration, bars.length, highlightStart, highlightEnd]);
+
+  const handleHighlightClick = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    // Request to become active track
+    onRequestPlay?.(trackId);
+
+    // Seek to highlight start
+    audio.currentTime = highlightStart;
+
+    // Always start playing
+    audio
+      .play()
+      .then(() => {
+        setIsPlaying(true);
+        startRaf();
+      })
+      .catch(() => {
+        setIsPlaying(false);
+        cancelRaf();
+      });
+  };
 
   return (
     <div className="flex w-full flex-col gap-2 text-[var(--background)]">
@@ -169,7 +256,7 @@ export default function Track({
         <button
           type="button"
           onClick={handleToggle}
-          className="inline-flex h-12 w-12 cursor-pointer items-center justify-center text-[var(--accent)] transition hover:text-[#ff6a2e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]/70 focus-visible:outline-offset-2 focus-visible:outline-[var(--background)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
+          className="inline-flex h-14 w-14 cursor-pointer items-center justify-center rounded-2xl text-[var(--accent)] transition hover:text-[#ff6a2e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]/70 focus-visible:outline-offset-2 focus-visible:outline-[var(--background)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
           aria-pressed={isPlaying}
           aria-label={isPlaying ? "Pause track" : "Play track"}
         >
@@ -197,13 +284,51 @@ export default function Track({
           )}
         </button>
 
-        <div className="relative flex flex-1 items-center gap-[2px] py-2 sm:gap-[7px] sm:py-3">
+        <div className="relative flex flex-1 items-center gap-[2px] py-2 pb-4 sm:gap-[7px] sm:py-3 sm:pb-5">
+          {highlightBounds ? (
+            <button
+              type="button"
+              onClick={handleHighlightClick}
+              className="absolute cursor-pointer text-[10px] font-semibold tracking-[0.3em] whitespace-nowrap focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]/70"
+              style={{
+                left: `${highlightBounds.centerRatio * 100}%`,
+                transform: "translateX(calc(-50% - 0.15em))",
+                bottom: -6,
+                color: HIGHLIGHT_COLOR,
+              }}
+              aria-label="Play highlighted clip"
+            >
+              HIGHLIGHTED
+            </button>
+          ) : null}
           {bars.map((height, index) => {
             const position = progress * bars.length;
             const fillAmount = Math.min(1, Math.max(0, position - index));
             const filled = index < Math.floor(position);
             const intensity = filled ? 1 : 0.35 + fillAmount * 0.65;
             const scale = 1 + fillAmount * 0.25;
+            const delay = `${index * 18}ms`;
+            const animateClass =
+              isPlaying && filled
+                ? "animate-wave-active"
+                : postPlayPulse && !filled
+                ? "animate-wave-late"
+                : "";
+            const isHighlighted =
+              highlightBounds &&
+              index / bars.length < highlightBounds.endRatio &&
+              (index + 1) / bars.length > highlightBounds.startRatio;
+
+            // Faded colors when not playing, bright when playing
+            const baseColor = filled
+              ? ACCENT
+              : isPlaying
+              ? BASE_BAR
+              : BASE_BAR_FADED;
+            const highlightColor = isPlaying
+              ? HIGHLIGHT_COLOR
+              : HIGHLIGHT_COLOR_FADED;
+            const barColor = isHighlighted ? highlightColor : baseColor;
 
             return (
               <button
@@ -214,15 +339,16 @@ export default function Track({
                 aria-label={`Seek to ${(index / bars.length) * 100}%`}
               >
                 <span
-                  className="absolute inset-x-0 rounded-full transition group-hover:bg-[var(--accent)]/85"
+                  className={`absolute inset-x-0 rounded-full transition group-hover:bg-[var(--accent)]/85 ${animateClass}`}
                   style={{
                     height: `${height}%`,
                     top: "50%",
                     transform: `translateY(-50%) scaleY(${scale})`,
-                    backgroundColor: filled ? ACCENT : BASE_BAR,
+                    backgroundColor: barColor,
                     opacity: filled ? intensity : 0.9,
                     transition:
                       "background-color 480ms ease-in-out, opacity 240ms ease, transform 160ms ease",
+                    animationDelay: delay,
                   }}
                 />
               </button>
