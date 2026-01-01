@@ -23,7 +23,7 @@ const bowlbyOne = Bowlby_One({
 });
 
 export const metadata: Metadata = {
-  title: "Ege Cam - Music Portfolio",
+  title: "Ege Çam - Music Portfolio",
   description: "Music projects and releases by Ege Cam.",
   icons: {
     icon: "/icon.png",
