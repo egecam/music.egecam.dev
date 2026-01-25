@@ -2,71 +2,19 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePostHog } from "posthog-js/react";
-import Track from "./components/Track";
-import Sparks from "./components/Sparks";
+import CassettePlayer from "./components/CassettePlayer";
 import Contact from "./components/Contact";
-
-type TrackData = {
-  sparkId: string;
-  trackId: string;
-  src: string;
-  title: string;
-  subtitle: string;
-  highlightStart: number;
-  highlightEnd: number;
-};
 
 export default function Home() {
   const posthog = usePostHog();
   const [activeTrackId, setActiveTrackId] = useState<string | null>(null);
-  const [selectedSparkId, setSelectedSparkId] = useState<string | null>(null);
   const [spotifyLoaded, setSpotifyLoaded] = useState(false);
-  const [displayedTrack, setDisplayedTrack] = useState<TrackData | null>(null);
-  const [trackAnimState, setTrackAnimState] = useState<"in" | "out">("in");
-  const pageLoadTimeRef = useRef<number>(Date.now());
+  const pageLoadTimeRef = useRef<number>(0);
 
-  const tracks: TrackData[] = [
-    {
-      sparkId: "late-night-drive",
-      trackId: "the-quiet-brave-lily",
-      src: "https://media.egecam.dev/audio/the_quiet_brave_lily.wav",
-      title: "The Quiet Brave Lily",
-      subtitle: "Nostalgic, fragile yet hopeful",
-      highlightStart: 81, // 1:21
-      highlightEnd: 95, // 1:35
-    },
-    {
-      sparkId: "analog-textures",
-      trackId: "flip-flops",
-      src: "https://media.egecam.dev/audio/flip-flop.wav",
-      title: "Flip-flops",
-      subtitle: "Lively seaside longing",
-      highlightStart: 116, // 1:56
-      highlightEnd: 135, // 2:15
-    },
-    {
-      sparkId: "cinema-grain",
-      trackId: "spellsire",
-      src: "https://media.egecam.dev/audio/spellsire.wav",
-      title: "Spellsire",
-      subtitle: "Neo-noir digital folk",
-      highlightStart: 138, // 2:18
-      highlightEnd: 157, // 2:37
-    },
-    {
-      sparkId: "coastal-air",
-      trackId: "monuments",
-      src: "https://media.egecam.dev/audio/monuments.wav",
-      title: "Monuments",
-      subtitle: "Mythic voice of ancient stones",
-      highlightStart: 64, // 1:04
-      highlightEnd: 80, // 1:20
-    },
-  ];
-
-  const selectedTrack = tracks.find(
-    (track) => track.sparkId === selectedSparkId
-  );
+  // Initialize page load time on mount
+  useEffect(() => {
+    pageLoadTimeRef.current = Date.now();
+  }, []);
 
   // Track page visit duration
   useEffect(() => {
@@ -90,29 +38,6 @@ export default function Home() {
       trackPageDuration();
     };
   }, [posthog]);
-
-  useEffect(() => {
-    if (!selectedTrack) {
-      setDisplayedTrack(null);
-      return;
-    }
-
-    if (!displayedTrack) {
-      setDisplayedTrack(selectedTrack);
-      setTrackAnimState("in");
-      return;
-    }
-
-    if (selectedTrack.trackId === displayedTrack.trackId) return;
-
-    setTrackAnimState("out");
-    const timeout = setTimeout(() => {
-      setDisplayedTrack(selectedTrack);
-      setTrackAnimState("in");
-    }, 260);
-
-    return () => clearTimeout(timeout);
-  }, [selectedTrack, displayedTrack]);
 
   return (
     <div className="flex min-h-screen items-start justify-center bg-[var(--background)] px-4 py-10 text-[var(--foreground)] sm:px-6 sm:py-12 md:py-14">
@@ -156,58 +81,31 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Sparks (blank) */}
-        <section className="space-y-2 pt-6 sm:pt-8">
-          <h2 className="title-strong text-3xl">Sparks</h2>
-          <div className="grid grid-cols-1 items-start gap-6 sm:gap-7 md:grid-cols-3">
-            <div className="md:col-span-2">
-              <Sparks
-                activeId={selectedSparkId}
-                onSelect={(id) => {
-                  setActiveTrackId(null);
-                  setSelectedSparkId(id);
-                }}
-              />
-            </div>
-            <div className="md:col-span-1 space-y-2 text-left pt-10 sm:pt-12 md:pt-16">
-              <p className="subtitle text-base">
-                My work is sparked by the intersection of memory, story, and
-                imagination. I draw from cultural roots, ancient narratives, and
-                everyday emotional residues, then extend them into worlds that
-                do not fully exist yet.
-              </p>
-            </div>
+        {/* Sparks */}
+        <section className="space-y-4 pt-6 sm:pt-8">
+          <div className="flex items-start justify-between gap-6">
+            <h2 className="title-strong text-3xl">Sparks</h2>
+            <p className="subtitle text-sm max-w-[200px] text-right hidden sm:block">
+              My work is sparked by memory, story, and imagination.
+            </p>
           </div>
-        </section>
-
-        <section className="space-y-6">
-          {displayedTrack && (
-            <div
-              key={displayedTrack.trackId}
-              className={`rounded-3xl border border-black/15 bg-[#1f1f1f] px-6 py-6 overflow-hidden [transform-origin:bottom] ${
-                trackAnimState === "in"
-                  ? "animate-genie-in"
-                  : "animate-genie-out"
-              }`}
-            >
-              <Track
-                trackId={displayedTrack.trackId}
-                isActive={activeTrackId === displayedTrack.trackId}
-                onRequestPlay={setActiveTrackId}
-                src={displayedTrack.src}
-                title={displayedTrack.title}
-                subtitle={displayedTrack.subtitle}
-                highlightStart={displayedTrack.highlightStart}
-                highlightEnd={displayedTrack.highlightEnd}
-              />
-            </div>
-          )}
+          <CassettePlayer
+            activeTrackId={activeTrackId}
+            onRequestPlay={setActiveTrackId}
+          />
         </section>
 
         {/* Contact */}
         <section className="space-y-4">
           <Contact />
         </section>
+
+        {/* Footnote */}
+        <footer className="pt-8 pb-4 text-center">
+          <p className="text-xs text-[var(--foreground)]/30 tracking-wide">
+            pressed with care, one track at a time
+          </p>
+        </footer>
       </main>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePostHog } from "posthog-js/react";
+import type { CassetteTheme } from "./CassettePlayer";
 
 // Track unique plays per session (module-level to persist across remounts)
 const playedTracksThisSession = new Set<string>();
@@ -15,8 +16,20 @@ type TrackProps = {
   coverSrc?: string;
   isActive?: boolean;
   onRequestPlay?: (id: string) => void;
+  onPlayStateChange?: (isPlaying: boolean) => void;
   highlightStart?: number;
   highlightEnd?: number;
+  theme?: CassetteTheme;
+};
+
+const defaultTheme: CassetteTheme = {
+  primary: "#d4c4a8",
+  secondary: "#a67c52",
+  accent: "#5c4033",
+  labelBg: "#f5f0e6",
+  labelText: "#3d2914",
+  reelColor: "#8b5a2b",
+  tapeColor: "#2d1f14",
 };
 
 export default function Track({
@@ -24,16 +37,14 @@ export default function Track({
   src = "https://media.egecam.dev/audio/monuments.wav",
   title = "Monuments",
   subtitle = "Introductory subtitle",
-  coverSrc,
   isActive = false,
   onRequestPlay,
+  onPlayStateChange,
   highlightStart = 60,
   highlightEnd = 75,
+  theme = defaultTheme,
 }: TrackProps) {
   const posthog = usePostHog();
-  const ACCENT = "var(--accent)";
-  const BASE_BAR = "#f5f5f5";
-  const BASE_BAR_FADED = "#a3a3a3";
   const HIGHLIGHT_COLOR = "#facc15";
   const HIGHLIGHT_COLOR_FADED = "#b8a033";
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -41,7 +52,7 @@ export default function Track({
   const postPulseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const playStartTimeRef = useRef<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0); // 0 - 1
+  const [progress, setProgress] = useState(0);
   const [postPlayPulse, setPostPlayPulse] = useState(false);
   const [duration, setDuration] = useState<number | null>(null);
 
@@ -93,7 +104,6 @@ export default function Track({
         setIsPlaying(true);
         startRaf();
         playStartTimeRef.current = Date.now();
-        // Track only first play per session
         if (!playedTracksThisSession.has(trackId)) {
           playedTracksThisSession.add(trackId);
           posthog.capture("played_track", { trackId, title });
@@ -111,7 +121,6 @@ export default function Track({
     audio.pause();
     setIsPlaying(false);
     cancelRaf();
-    // Track listening duration
     if (playStartTimeRef.current) {
       const listenedSeconds = Math.round(
         (Date.now() - playStartTimeRef.current) / 1000
@@ -170,7 +179,6 @@ export default function Track({
       postPulseTimeoutRef.current = setTimeout(() => {
         setPostPlayPulse(false);
       }, 900);
-      // Track listening duration on end
       if (playStartTimeRef.current) {
         const listenedSeconds = Math.round(
           (Date.now() - playStartTimeRef.current) / 1000
@@ -205,6 +213,7 @@ export default function Track({
       cancelRaf();
       clearPostPulse();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -214,12 +223,15 @@ export default function Track({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive, isPlaying]);
 
+  useEffect(() => {
+    onPlayStateChange?.(isPlaying);
+  }, [isPlaying, onPlayStateChange]);
+
   const highlightBounds = useMemo(() => {
     if (!duration || Number.isNaN(duration)) return null;
     const startRatio = Math.max(0, Math.min(1, highlightStart / duration));
     const endRatio = Math.max(startRatio, Math.min(1, highlightEnd / duration));
 
-    // Calculate actual highlighted bar indices
     let firstHighlightedIndex = -1;
     let lastHighlightedIndex = -1;
     for (let i = 0; i < bars.length; i++) {
@@ -231,7 +243,6 @@ export default function Track({
       }
     }
 
-    // Calculate center position based on actual bar indices
     const centerIndex = (firstHighlightedIndex + lastHighlightedIndex + 1) / 2;
     const centerRatio = centerIndex / bars.length;
 
@@ -248,19 +259,14 @@ export default function Track({
     const audio = audioRef.current;
     if (!audio) return;
 
-    // Request to become active track
     onRequestPlay?.(trackId);
-
-    // Seek to highlight start
     audio.currentTime = highlightStart;
 
-    // Always start playing
     audio
       .play()
       .then(() => {
         setIsPlaying(true);
         startRaf();
-        // Track only first highlight play per session
         if (!playedHighlightsThisSession.has(trackId)) {
           playedHighlightsThisSession.add(trackId);
           posthog.capture("played_highlight", { trackId, title });
@@ -272,131 +278,306 @@ export default function Track({
       });
   };
 
+  // Format time as mm:ss
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const currentTime = duration ? progress * duration : 0;
+
   return (
-    <div className="flex w-full flex-col gap-2 text-[var(--background)]">
-      <div className="flex items-center gap-3">
-        <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-[var(--accent)] via-rose-400 to-indigo-500">
-          {coverSrc ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={coverSrc}
-              alt=""
-              className="h-full w-full object-cover"
-              loading="lazy"
-            />
-          ) : null}
+    <div className="flex w-full flex-col gap-3">
+      {/* Tape deck header with track info */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {/* Mini cassette icon */}
+          <div
+            className={`relative h-10 w-14 rounded-md transition-all duration-500 ${
+              isPlaying ? "animate-pulse-subtle" : ""
+            }`}
+            style={{
+              background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary} 100%)`,
+              boxShadow: isPlaying
+                ? `0 0 20px ${theme.accent}40, 0 4px 12px rgba(0,0,0,0.2)`
+                : "0 2px 8px rgba(0,0,0,0.15)",
+            }}
+          >
+            {/* Mini tape window */}
+            <div
+              className="absolute bottom-1 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1 rounded-sm"
+              style={{
+                width: "36px",
+                height: "12px",
+                backgroundColor: "#1a1a1a",
+              }}
+            >
+              {/* Mini reels */}
+              {[0, 1].map((i) => (
+                <div
+                  key={i}
+                  className={`h-2 w-2 rounded-full ${
+                    isPlaying ? "animate-spin-slow" : ""
+                  }`}
+                  style={{ backgroundColor: theme.reelColor }}
+                />
+              ))}
+            </div>
+            {/* Label strip */}
+            <div
+              className="absolute top-1 left-1 right-1 h-4 rounded-sm flex items-center justify-center"
+              style={{ backgroundColor: theme.labelBg }}
+            >
+              <span
+                className="text-[6px] font-bold uppercase tracking-wider truncate px-1"
+                style={{ color: theme.labelText }}
+              >
+                {title.slice(0, 12)}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-0.5">
+            <p
+              className="text-[10px] sm:text-xs font-medium uppercase tracking-widest transition-opacity duration-300"
+              style={{
+                color: theme.primary,
+                opacity: isPlaying ? 1 : 0.6,
+              }}
+            >
+              {subtitle}
+            </p>
+            <h2
+              className="text-lg sm:text-xl font-bold transition-all duration-300"
+              style={{
+                color: isPlaying ? "#ffffff" : "#e5e5e5",
+                textShadow: isPlaying ? `0 0 20px ${theme.accent}60` : "none",
+              }}
+            >
+              {title}
+            </h2>
+          </div>
         </div>
-        <div className="flex flex-col gap-1">
-          <p className="eyebrow text-xs" style={{ color: "#f5f5f5" }}>
-            {subtitle}
-          </p>
-          <h2 className="audio-title text-xl">{title}</h2>
+
+        {/* Time display - tape counter style */}
+        <div
+          className={`font-mono text-sm sm:text-base tracking-wider transition-all duration-500 ${
+            isPlaying ? "opacity-100" : "opacity-40"
+          }`}
+          style={{
+            color: theme.primary,
+            textShadow: isPlaying ? `0 0 10px ${theme.primary}` : "none",
+          }}
+        >
+          {formatTime(currentTime)}
+          <span className="opacity-50"> / {duration ? formatTime(duration) : "--:--"}</span>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      {/* Main player controls */}
+      <div className="flex items-center gap-3 sm:gap-4">
+        {/* Play/Pause button - tape deck style */}
         <button
           type="button"
           onClick={handleToggle}
-          className="inline-flex h-14 w-14 cursor-pointer items-center justify-center rounded-2xl text-[var(--accent)] transition hover:text-[#ff6a2e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]/70 focus-visible:outline-offset-2 focus-visible:outline-[var(--background)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
+          className={`relative flex h-12 w-12 sm:h-14 sm:w-14 cursor-pointer items-center justify-center rounded-xl transition-all duration-300 ${
+            isPlaying ? "scale-105" : "hover:scale-105"
+          }`}
+          style={{
+            background: isPlaying
+              ? `linear-gradient(135deg, ${theme.accent} 0%, ${theme.secondary} 100%)`
+              : `linear-gradient(135deg, ${theme.primary}80 0%, ${theme.secondary}60 100%)`,
+            boxShadow: isPlaying
+              ? `0 0 30px ${theme.accent}50, 0 4px 15px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)`
+              : "0 2px 10px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)",
+          }}
           aria-pressed={isPlaying}
           aria-label={isPlaying ? "Pause track" : "Play track"}
         >
+          {/* Glow ring when playing */}
+          <div
+            className={`absolute inset-0 rounded-xl transition-opacity duration-500 ${
+              isPlaying ? "opacity-100 animate-glow-pulse" : "opacity-0"
+            }`}
+            style={{
+              boxShadow: `0 0 20px ${theme.accent}60`,
+            }}
+          />
           {isPlaying ? (
             <svg
-              width="24"
-              height="24"
+              width="22"
+              height="22"
               viewBox="0 0 24 24"
-              fill="currentColor"
+              fill={theme.labelBg}
               aria-hidden
+              className="relative z-10"
             >
               <rect x="5" y="4" width="5" height="16" rx="1.2" />
               <rect x="14" y="4" width="5" height="16" rx="1.2" />
             </svg>
           ) : (
             <svg
-              width="24"
-              height="24"
+              width="22"
+              height="22"
               viewBox="0 0 24 24"
-              fill="currentColor"
+              fill={theme.labelBg}
               aria-hidden
+              className="relative z-10 translate-x-0.5"
             >
               <path d="M6 4.5v15a1 1 0 0 0 1.52.85l12-7.5a1 1 0 0 0 0-1.7l-12-7.5A1 1 0 0 0 6 4.5Z" />
             </svg>
           )}
         </button>
 
-        <div className="relative flex flex-1 items-center gap-[2px] py-2 pb-4 sm:gap-[7px] sm:py-3 sm:pb-5">
-          {highlightBounds ? (
+        {/* VU Meter / Waveform display */}
+        <div
+          className="relative flex-1 rounded-lg p-2 sm:p-3 overflow-hidden"
+          style={{
+            background: "linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%)",
+            boxShadow:
+              "inset 0 2px 10px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.05)",
+          }}
+        >
+          {/* Scanline effect when playing */}
+          <div
+            className={`absolute inset-0 pointer-events-none transition-opacity duration-500 ${
+              isPlaying ? "opacity-30" : "opacity-0"
+            }`}
+            style={{
+              background:
+                "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.3) 2px, rgba(0,0,0,0.3) 4px)",
+            }}
+          />
+
+          {/* Glow overlay when playing */}
+          <div
+            className={`absolute inset-0 pointer-events-none transition-opacity duration-700 ${
+              isPlaying ? "opacity-100" : "opacity-0"
+            }`}
+            style={{
+              background: `radial-gradient(ellipse at ${progress * 100}% 50%, ${theme.accent}20 0%, transparent 50%)`,
+            }}
+          />
+
+          {/* Highlighted section label */}
+          {highlightBounds && (
             <button
               type="button"
               onClick={handleHighlightClick}
-              className="absolute cursor-pointer text-[10px] font-semibold tracking-[0.3em] whitespace-nowrap focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]/70"
+              className={`absolute z-20 cursor-pointer text-[8px] sm:text-[10px] font-bold tracking-[0.2em] whitespace-nowrap transition-all duration-500 ${
+                isPlaying
+                  ? "opacity-100 animate-highlight-glow"
+                  : "opacity-60 hover:opacity-100"
+              }`}
               style={{
                 left: `${highlightBounds.centerRatio * 100}%`,
-                transform: "translateX(calc(-50% - 0.15em))",
-                bottom: -6,
+                transform: "translateX(-50%)",
+                bottom: "2px",
                 color: HIGHLIGHT_COLOR,
+                textShadow: isPlaying ? `0 0 8px ${HIGHLIGHT_COLOR}` : "none",
               }}
               aria-label="Play highlighted clip"
             >
               HIGHLIGHTED
             </button>
-          ) : null}
-          {bars.map((height, index) => {
-            const position = progress * bars.length;
-            const fillAmount = Math.min(1, Math.max(0, position - index));
-            const filled = index < Math.floor(position);
-            const intensity = filled ? 1 : 0.35 + fillAmount * 0.65;
-            const scale = 1 + fillAmount * 0.25;
-            const delay = `${index * 18}ms`;
-            const animateClass =
-              isPlaying && filled
-                ? "animate-wave-active"
-                : postPlayPulse && !filled
-                ? "animate-wave-late"
-                : "";
-            const isHighlighted =
-              highlightBounds &&
-              index / bars.length < highlightBounds.endRatio &&
-              (index + 1) / bars.length > highlightBounds.startRatio;
+          )}
 
-            // Faded colors when not playing, bright when playing
-            const baseColor = filled
-              ? ACCENT
-              : isPlaying
-              ? BASE_BAR
-              : BASE_BAR_FADED;
-            const highlightColor = isPlaying
-              ? HIGHLIGHT_COLOR
-              : HIGHLIGHT_COLOR_FADED;
-            const barColor = isHighlighted ? highlightColor : baseColor;
+          {/* Waveform bars */}
+          <div className="relative flex items-center gap-[1px] sm:gap-[3px] h-12 sm:h-16">
+            {bars.map((height, index) => {
+              const position = progress * bars.length;
+              const fillAmount = Math.min(1, Math.max(0, position - index));
+              const filled = index < Math.floor(position);
+              const isHighlighted =
+                highlightBounds &&
+                index / bars.length < highlightBounds.endRatio &&
+                (index + 1) / bars.length > highlightBounds.startRatio;
 
-            return (
-              <button
-                key={index}
-                type="button"
-                onClick={() => handleBarClick(index)}
-                className="group relative h-14 w-[3px] cursor-pointer rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] sm:h-20 sm:w-[6px]"
-                aria-label={`Seek to ${(index / bars.length) * 100}%`}
-              >
-                <span
-                  className={`absolute inset-x-0 rounded-full transition group-hover:bg-[var(--accent)]/85 ${animateClass}`}
-                  style={{
-                    height: `${height}%`,
-                    top: "50%",
-                    transform: `translateY(-50%) scaleY(${scale})`,
-                    backgroundColor: barColor,
-                    opacity: filled ? intensity : 0.9,
-                    transition:
-                      "background-color 480ms ease-in-out, opacity 240ms ease, transform 160ms ease",
-                    animationDelay: delay,
-                  }}
-                />
-              </button>
-            );
-          })}
+              // Dynamic colors based on playing state
+              const baseColor = filled
+                ? theme.accent
+                : isPlaying
+                ? theme.primary
+                : `${theme.primary}60`;
+              const highlightColor = isPlaying
+                ? HIGHLIGHT_COLOR
+                : HIGHLIGHT_COLOR_FADED;
+              const barColor = isHighlighted ? highlightColor : baseColor;
+
+              // Animation classes
+              const animateClass =
+                isPlaying && filled
+                  ? "animate-bar-pulse"
+                  : postPlayPulse && !filled
+                  ? "animate-wave-late"
+                  : "";
+
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => handleBarClick(index)}
+                  className="group relative flex-1 h-full cursor-pointer focus:outline-none"
+                  aria-label={`Seek to ${Math.round((index / bars.length) * 100)}%`}
+                >
+                  <span
+                    className={`absolute inset-x-0 rounded-sm transition-all group-hover:brightness-125 ${animateClass}`}
+                    style={{
+                      height: `${height}%`,
+                      top: "50%",
+                      transform: `translateY(-50%) scaleY(${1 + fillAmount * 0.15})`,
+                      backgroundColor: barColor,
+                      opacity: filled ? 1 : isPlaying ? 0.5 : 0.25,
+                      boxShadow:
+                        filled && isPlaying
+                          ? `0 0 8px ${barColor}80`
+                          : "none",
+                      transition:
+                        "background-color 300ms ease, opacity 200ms ease, transform 150ms ease, box-shadow 300ms ease",
+                    }}
+                  />
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Progress indicator line */}
+          <div
+            className={`absolute bottom-0 left-0 h-[2px] transition-all duration-300 ${
+              isPlaying ? "opacity-100" : "opacity-50"
+            }`}
+            style={{
+              width: `${progress * 100}%`,
+              background: `linear-gradient(90deg, ${theme.accent}, ${theme.primary})`,
+              boxShadow: isPlaying ? `0 0 10px ${theme.accent}` : "none",
+            }}
+          />
         </div>
+      </div>
+
+      {/* Recording indicator - visible when playing */}
+      <div
+        className={`flex items-center justify-center gap-2 transition-all duration-500 ${
+          isPlaying
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 -translate-y-2 pointer-events-none"
+        }`}
+      >
+        <div
+          className="h-2 w-2 rounded-full animate-pulse"
+          style={{ backgroundColor: theme.accent }}
+        />
+        <span
+          className="text-[10px] font-semibold uppercase tracking-[0.3em]"
+          style={{ color: theme.primary }}
+        >
+          Now Playing
+        </span>
+        <div
+          className="h-2 w-2 rounded-full animate-pulse"
+          style={{ backgroundColor: theme.accent, animationDelay: "0.5s" }}
+        />
       </div>
 
       <audio ref={audioRef} preload="metadata">

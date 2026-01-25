@@ -139,3 +139,105 @@ body {
 .animate-wave-late {
   animation: wave-late 0.9s ease-in-out 2 alternate;
 }
+
+/* Cassette animations */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 2s linear infinite;
+}
+
+@keyframes cassette-insert {
+  0% {
+    transform: translate(calc(-50% + var(--x-offset, 0px)), -150%) scale(var(--scale, 1));
+    opacity: 0;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--x-offset, 0px)), -50%) scale(var(--scale, 1));
+    opacity: var(--target-opacity, 1);
+  }
+}
+
+@keyframes cassette-eject {
+  0% {
+    transform: translate(calc(-50% + var(--x-offset, 0px)), -50%) scale(var(--scale, 1));
+    opacity: var(--target-opacity, 1);
+  }
+  100% {
+    transform: translate(calc(-50% + var(--x-offset, 0px)), -150%) scale(var(--scale, 1));
+    opacity: 0;
+  }
+}
+
+.cassette-wrapper {
+  will-change: transform, opacity;
+}
+
+/* Cassette hover effect */
+.cassette {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cassette-wrapper:hover .cassette {
+  transform: translateY(-4px);
+}
+
+/* Track player animations */
+@keyframes pulse-subtle {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes bar-pulse {
+  0%, 100% {
+    transform: translateY(-50%) scaleY(1);
+  }
+  50% {
+    transform: translateY(-50%) scaleY(1.08);
+  }
+}
+
+.animate-bar-pulse {
+  animation: bar-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes highlight-glow {
+  0%, 100% {
+    text-shadow: 0 0 8px currentColor;
+  }
+  50% {
+    text-shadow: 0 0 16px currentColor, 0 0 24px currentColor;
+  }
+}
+
+.animate-highlight-glow {
+  animation: highlight-glow 1.5s ease-in-out infinite;
+}
