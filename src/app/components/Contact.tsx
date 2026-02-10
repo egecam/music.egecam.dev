@@ -14,7 +14,7 @@ export default function Contact({
 you can reach me at hello@egecam.dev.
 
 I'm open to work across film, games, and other narrative-driven projects.`,
-  email = "hello@egecam.dev",
+  email = "hey@egecam.dev",
 }: ContactProps) {
   const posthog = usePostHog();
   return (
