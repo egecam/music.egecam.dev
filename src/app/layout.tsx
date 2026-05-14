@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { Bowlby_One, IBM_Plex_Sans, Inter } from "next/font/google";
+import Script from "next/script";
 import PostHogProvider from "./providers/PostHogProvider";
 import "./globals.css";
+
+const cloudflareWebAnalyticsBeacon = JSON.stringify({
+  token: "36f5cb17deb24553b7a108978c4aa49a",
+});
 
 const inter = Inter({
   variable: "--font-inter",
@@ -44,6 +49,11 @@ export default function RootLayout({
         className={`${inter.variable} ${ibmPlexSans.variable} ${bowlbyOne.variable} antialiased`}
       >
         <PostHogProvider>{children}</PostHogProvider>
+        <Script
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          strategy="afterInteractive"
+          data-cf-beacon={cloudflareWebAnalyticsBeacon}
+        />
       </body>
     </html>
   );
